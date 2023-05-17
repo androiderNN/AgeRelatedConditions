@@ -7,25 +7,41 @@ from sklearn.metrics import log_loss
 class BaseClass():
     source_dir = '../sources/processed'
     export_dir = '../export'
+    st = False
     rand = 0
 
     def main(self):
-        train = self.load_dataset()
+        train = self.load_dataset(self.st)
         x, y = self.fix_dataset(train)
         x, validation_x, y, validation_y = train_test_split(x, y, test_size=0.2, random_state=self.rand)
 
         model = self.train_cv(x, y)
-        pred_mean, _, _ = self.predict_cv(model, validation_x)
-        print(log_loss(validation_y, pred_mean))
+        pred_mean, pred, submission = self.predict_cv(model, x)
+        print('\ntraining data :', log_loss(y, pred_mean))
+        pred_mean, pred, submission = self.predict_cv(model, validation_x)
+        print('validation data :', log_loss(validation_y, pred_mean))
+        # print(pd.DataFrame({'true':validation_y, 'pred':pred_mean}).head(30))
 
         pass
 
-    def load_dataset(self):
+    def load_dataset(self, st: bool =False):
         '''
         前処理済みのトレーニングデータをロードする関数
-        引数なしで実行
+        
+        Parameters
+        ----------
+        st : bool
+            標準化されたトレーニングデータを読み込むか
+        
+        Returns
+        -------
+        train : dataframe
+            トレーニングデータ
         '''
-        return pd.read_csv(os.path.join(self.source_dir, 'train.csv'))
+        if st:
+            return pd.read_csv(os.path.join(self.source_dir, 'train_st.csv'))
+        else:            
+            return pd.read_csv(os.path.join(self.source_dir, 'train.csv'))
 
     def fix_dataset(self, train, target:str =None):
         '''
@@ -54,9 +70,9 @@ class BaseClass():
 
         return x, y
 
-    def split_dataset(self, x, y):
-        train_x, train_y, validation_x, validation_y = train_test_split(x, y, test_size=0.2, random_state=self.rand)
-        return train_x, train_y, validation_x, validation_y
+    # def split_dataset(self, x, y):
+    #     train_x, train_y, validation_x, validation_y = train_test_split(x, y, test_size=0.2, random_state=self.rand)
+    #     return train_x, train_y, validation_x, validation_y
 
     # def train(self, tr_x, tr_y, va_x=None, va_y=None, random_state:int=rand):
     #     '''
@@ -85,8 +101,10 @@ class BaseClass():
         '''
         # x.reset_index(inplace=True)
         # y.reset_index(inplace=True)
+        print('-----------------------------------------------------------\n')
         kf = KFold(n_splits=5, shuffle=True, random_state=rand)
-        model = []
+        model = list()
+
         x = x.drop(columns='Id', errors='ignore')
         y = y.drop(columns='Id', errors='ignore')
         
@@ -96,8 +114,13 @@ class BaseClass():
             va_x = x.iloc[va_ind]
             va_y = y.iloc[va_ind]
 
-            model.append(self.train(tr_x, tr_y, va_x, va_y, random_state=self.rand))
+            mod = self.train(tr_x, tr_y, va_x, va_y, random_state=self.rand)
+            model.append(mod)
 
+            print("train's log_loss :", log_loss(tr_y, self.predict(mod, tr_x)))
+            print("val's log_loss   :", log_loss(va_y, self.predict(mod, va_x)), '\n')
+
+        print('-----------------------------------------------------------')
         return model
     
     # def predict(self, model, df):
