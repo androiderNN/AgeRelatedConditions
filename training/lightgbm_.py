@@ -15,9 +15,9 @@ class lightgbm_(BaseClass):
             'random_state': self.rand,
             'verbose': -1,
 
-            'bagging_fraction': 0.7,
+            'bagging_fraction': 0.8,
             'bagging_freq': 1,
-            'feature_fraction': 1,
+            'feature_fraction': 0.8,
             'min_data_in_leaf': 5,
             'lambda_l1': 0.5,
             'lambda_l2': 0.5
@@ -67,6 +67,18 @@ class lightgbm_(BaseClass):
         result : ndarray
         '''
         return np.array(model.predict(df))
+    
+    def main(self):
+        super().main()
+
+        l = np.array([m.feature_importance(importance_type='gain') for m in self.model])
+        l = l.mean(axis=0)
+        imp = pd.DataFrame(l, index=self.col, columns=['imp'])
+        # imp = pd.Series(l)
+        # imp.index = self.col
+        # imp.columns = ['imp']
+        imp.sort_values('imp', inplace=True, ascending=0)
+        print(imp[imp['imp']>30].index.tolist())
 
 if __name__ == '__main__':
     lgb_ = lightgbm_()

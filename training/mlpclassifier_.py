@@ -1,13 +1,11 @@
-import numpy as np
-import pandas as pd
 from sklearn.neural_network import MLPClassifier
-import os
-
 from baseclass import BaseClass
 
 class mlpclassifier_(BaseClass):
     st = True
-    rand = 22
+    rand = 2
+    # col = ['DU', 'AB', 'FL', 'DA', 'GL', 'BQ', 'CR', 'DH', 'DE', 'DI', 'FR', 'AF', 'EE', 'BC', 'DY', 'CC']
+    col = ['DU', 'AB', 'FL', 'DA', 'GL', 'BQ', 'CR', 'DH', 'DE', 'DI']
 
     def train(self, tr_x, tr_y, va_x=None, va_y=None, random_state:int =None):
         '''
@@ -24,12 +22,17 @@ class mlpclassifier_(BaseClass):
         -------
         model : mlpclassifier model
         '''
+        tr_x = tr_x[self.col]
+        va_x = va_x[self.col]
+
         model = MLPClassifier(
             hidden_layer_sizes=(30, 10, 4),
-            max_iter=1000,
+            max_iter=10000,
             shuffle=True,
             random_state=self.rand,
             early_stopping=True,
+            n_iter_no_change=100,
+            alpha=0.001,
             validation_fraction=0.1
         )
         model.fit(tr_x, tr_y)
@@ -51,7 +54,7 @@ class mlpclassifier_(BaseClass):
         -------
         result : ndarray
         '''
-        return model.predict_proba(df)[:,1]
+        return model.predict_proba(df[self.col])[:,1]
 
 if __name__ == '__main__':
     mlpc_ = mlpclassifier_()

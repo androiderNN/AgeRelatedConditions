@@ -17,12 +17,14 @@ class BaseClass():
 
         model = self.train_cv(x, y)
         pred_mean, pred, submission = self.predict_cv(model, x)
-        print('\ntraining data :', log_loss(y, pred_mean))
+        print('\ntraining data   :', log_loss(y, pred_mean))
         pred_mean, pred, submission = self.predict_cv(model, validation_x)
         print('validation data :', log_loss(validation_y, pred_mean))
         # print(pd.DataFrame({'true':validation_y, 'pred':pred_mean}).head(30))
-
-        pass
+        
+        self.col = x.columns.tolist()
+        self.col.remove('Id')
+        self.model = model
 
     def load_dataset(self, st: bool =False):
         '''
@@ -69,17 +71,6 @@ class BaseClass():
         x = train.drop(columns=dlist, errors='ignore')
 
         return x, y
-
-    # def split_dataset(self, x, y):
-    #     train_x, train_y, validation_x, validation_y = train_test_split(x, y, test_size=0.2, random_state=self.rand)
-    #     return train_x, train_y, validation_x, validation_y
-
-    # def train(self, tr_x, tr_y, va_x=None, va_y=None, random_state:int=rand):
-    #     '''
-    #     各機械学習アルゴリズム
-    #     '''
-    #     model = self.train_(tr_x, tr_y, va_x, va_y, random_state)
-    #     return model
 
     def train_cv(self, x, y, rand: int =rand) ->list:
         '''
